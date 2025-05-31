@@ -32,7 +32,7 @@ const Button: FC<Props> = ({
           className={`flex items-center justify-center gap-1 bg-primary-c900 w-fit px-4 py-1.5 rounded-full cursor-pointer hover:bg-primary-c700 active:bg-primary-c800 hover:scale-105 duration-300 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${className}`}
         >
           {startIcon && <div className="flex items-center">{startIcon}</div>}
-          <div className="text-center font-medium text-sm text-white">{label}</div>
+          <div className="text-center font-medium text-sm xl:text-base 2xl:text-lg text-white">{label}</div>
           {endIcon && <div className="flex items-center">{endIcon}</div>}
         </button>
       ) : null}

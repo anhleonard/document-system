@@ -22,7 +22,7 @@ const FileInput = ({
   disabled = false,
   value,
   accept = ".pdf,.xlsx,.xls,.doc,.docx",
-  maxSize = 10, // 10MB default
+  maxSize = 100, // 100MB default
 }: FileInputProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isFocused, setIsFocused] = useState(false);

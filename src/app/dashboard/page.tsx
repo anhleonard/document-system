@@ -6,6 +6,9 @@ import Tabs from "@/lib/tabs";
 import FieldsExtractionResults from "@/components/dashboard/FieldsExtractionResults";
 import ProductsSupplierResults from "@/components/dashboard/ProductsSupplierResults";
 import { extractFields, extractSuppliers } from "@/apis/services/dashboard";
+import { useDispatch } from "react-redux";
+import { openLoading, closeLoading } from "@/redux/slices/loading-slice";
+import { openAlert } from "@/redux/slices/alert-slice";
 
 interface ExtractionField {
   value: string | null;
@@ -32,6 +35,7 @@ interface Product {
       link: string;
       seller: string;
       specs: string;
+      price: string;
     }>;
     search_reason: string;
   };
@@ -42,8 +46,8 @@ interface ProductsResponse {
 }
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [extractionResults, setExtractionResults] = useState<ExtractionResponse | null>(null);
   const [productsResults, setProductsResults] = useState<ProductsResponse | null>(null);
@@ -61,17 +65,34 @@ const Dashboard = () => {
       return;
     }
 
-    setIsUploading(true);
+    dispatch(openLoading());
     setUploadError(null);
 
     try {
       const response = await extractFields({ file: selectedFile });
+      if (response) {
+        dispatch(
+          openAlert({
+            isOpen: true,
+            title: "SUCCESS",
+            subtitle: "Extract fields successfully",
+            type: "success",
+          }),
+        );
+      }
       setExtractionResults(response);
     } catch (error) {
-      console.error("Upload error:", error);
-      setUploadError(error instanceof Error ? error.message : "Failed to upload file");
+      dispatch(
+        openAlert({
+          isOpen: true,
+          title: "ERROR",
+          subtitle: error instanceof Error ? error.message : "Failed to extract fields",
+          type: "error",
+        }),
+      );
+      setUploadError(error instanceof Error ? error.message : "Failed to process file");
     } finally {
-      setIsUploading(false);
+      dispatch(closeLoading());
     }
   };
 
@@ -81,24 +102,41 @@ const Dashboard = () => {
       return;
     }
 
-    setIsUploading(true);
+    dispatch(openLoading());
     setUploadError(null);
 
     try {
       const response = await extractSuppliers({ file: selectedFile });
+      if (response) {
+        dispatch(
+          openAlert({
+            isOpen: true,
+            title: "SUCCESS",
+            subtitle: "Find suppliers successfully",
+            type: "success",
+          }),
+        );
+      }
       setProductsResults(response);
     } catch (error) {
-      console.error("Upload error:", error);
-      setUploadError(error instanceof Error ? error.message : "Failed to upload file");
+      dispatch(
+        openAlert({
+          isOpen: true,
+          title: "ERROR",
+          subtitle: error instanceof Error ? error.message : "Failed to find suppliers",
+          type: "error",
+        }),
+      );
+      setUploadError(error instanceof Error ? error.message : "Failed to process file");
     } finally {
-      setIsUploading(false);
+      dispatch(closeLoading());
     }
   };
 
   const handleReset = () => {
     setSelectedFile(null);
     setUploadError(null);
-    setIsUploading(false);
+    dispatch(closeLoading());
     setExtractionResults(null);
     setProductsResults(null);
   };
@@ -117,7 +155,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="w-full h-full text-grey-c900 text-base max-w-screen-md mx-auto">
+    <div className="w-full h-full text-grey-c900 text-base max-w-screen-md xl:max-w-screen-lg mx-auto">
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold text-center mt-2">Document Processing System</h1>
       </div>
@@ -127,22 +165,22 @@ const Dashboard = () => {
           onChange={handleFileChange}
           error={!!uploadError}
           helperText={uploadError || ""}
-          disabled={isUploading}
+          disabled={false}
         />
         <div className="grid grid-cols-3 gap-8">
           <Button
             className="w-full py-3"
-            label={isUploading ? "Uploading..." : "Extract Fields"}
+            label="Extract Fields"
             onClick={handleExtractFields}
-            disabled={isUploading || !selectedFile}
+            disabled={!selectedFile}
           />
           <Button
             className="w-full py-3"
-            label={isUploading ? "Uploading..." : "Extract Products & Suppliers"}
+            label="Extract Products & Suppliers"
             onClick={handleExtractProducts}
-            disabled={isUploading || !selectedFile}
+            disabled={!selectedFile}
           />
-          <Button className="w-full py-3" label="Reset" onClick={handleReset} disabled={isUploading} />
+          <Button className="w-full py-3" label="Reset" onClick={handleReset} />
         </div>
         <div className="mt-6 mb-12">
           <Tabs tabs={tabs} defaultTab="fields" />

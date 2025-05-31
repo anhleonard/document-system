@@ -5,6 +5,8 @@ import { Provider } from "react-redux";
 import { store } from "@/redux/store";
 import Modal from "@/components/modal";
 import ConfirmModal from "@/components/confirm-modal";
+import Loading from "@/components/loading";
+import { Alert } from "@/components/alert";
 
 const Urbanist = localFont({
   src: [
@@ -32,6 +34,8 @@ export default function RootLayout({
           <div className="w-full bg-white">{children}</div>
           <Modal />
           <ConfirmModal />
+          <Loading />
+          <Alert />
         </Provider>
       </body>
     </html>

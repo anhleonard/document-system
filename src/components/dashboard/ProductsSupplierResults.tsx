@@ -6,6 +6,7 @@ interface Supplier {
   link: string;
   seller: string;
   specs: string;
+  price: string;
 }
 
 interface SupplierSearch {
@@ -15,7 +16,6 @@ interface SupplierSearch {
 }
 
 interface Product {
-  sheet_name: string;
   product_name: string;
   technical_requirements: string;
   confidence_score: number;
@@ -28,27 +28,27 @@ interface ProductsSupplierResultsProps {
 }
 
 const ProductsSupplierResults = ({ results }: ProductsSupplierResultsProps) => {
-  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+  const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set());
 
-  const toggleProduct = (sheetName: string) => {
+  const toggleProduct = (index: number) => {
     setExpandedProducts((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(sheetName)) {
-        newSet.delete(sheetName);
+      if (newSet.has(index)) {
+        newSet.delete(index);
       } else {
-        newSet.add(sheetName);
+        newSet.add(index);
       }
       return newSet;
     });
   };
 
-  const renderProduct = (product: Product) => {
-    const isExpanded = expandedProducts.has(product.sheet_name);
+  const renderProduct = (product: Product, index: number) => {
+    const isExpanded = expandedProducts.has(index);
 
-    return (
-      <div key={product.sheet_name} className="bg-primary-c50 rounded-lg p-4 flex flex-col gap-2 mb-4">
+    const productContent = (
+      <>
         <button
-          onClick={() => toggleProduct(product.sheet_name)}
+          onClick={() => toggleProduct(index)}
           className="flex items-center justify-between w-full text-left hover:bg-primary-c100 rounded-lg p-2 transition-colors"
         >
           <div className="flex items-center gap-2 text-grey-c800 font-bold text-base">
@@ -72,39 +72,37 @@ const ProductsSupplierResults = ({ results }: ProductsSupplierResultsProps) => {
               <Image src="/icons/class-icon.svg" alt="class-icon" width={14} height={14} />
               <div className="text-grey-c700 font-bold text-xs">Technical requirements</div>
             </div>
-            <div className="text-grey-c700 font-normal text-base pl-4 whitespace-pre-line">
-              {product.technical_requirements}
+            <div className="text-grey-c900 font-normal text-base pl-4 whitespace-pre-line">
+              {product.technical_requirements || "--"}
             </div>
           </div>
-          <div className="flex flex-col gap-1 pl-4">
-            <div className="flex items-center gap-1">
-              <Image src="/icons/class-icon.svg" alt="class-icon" width={14} height={14} />
-              <div className="text-grey-c700 font-bold text-xs">Sheet name</div>
-            </div>
-            <div className="text-grey-c700 font-normal text-base pl-4">{product.sheet_name}</div>
-          </div>
-          <div className="flex flex-col gap-1 pl-4">
+          {/* <div className="flex flex-col gap-1 pl-4">
             <div className="flex items-center gap-1">
               <Image src="/icons/class-icon.svg" alt="class-icon" width={14} height={14} />
               <div className="text-grey-c700 font-bold text-xs">Confidence score</div>
             </div>
             <div className="text-grey-c700 font-normal text-base pl-4">{product.confidence_score}%</div>
-          </div>
+          </div> */}
         </div>
 
         {/* Suppliers */}
         <div className={`flex flex-col gap-4 transition-all duration-300 ${isExpanded ? "block" : "hidden"}`}>
-          {product.supplier_search.suppliers.map((supplier, index) => (
-            <div key={supplier.seller + index} className="flex flex-col gap-4 border-t border-grey-c200 pt-4">
+          {product.supplier_search.suppliers.length > 0 ? (
+            <div className="font-bold text-sm pl-2 mt-2 bg-primary-c900 text-white px-2 py-1 rounded-lg w-fit">
+              Supplier list
+            </div>
+          ) : null}
+          {product.supplier_search.suppliers.map((supplier, supplierIndex) => (
+            <div key={`${index}-${supplierIndex}`} className="flex flex-col gap-4">
               <div className="text-grey-c700 font-bold text-sm pl-2">
-                {index + 1}. {supplier.seller}
+                {supplierIndex + 1}. {supplier.seller}
               </div>
               <div className="flex flex-col gap-4">
                 <div className="relative">
                   <label className="absolute -top-1 left-2 px-1 bg-gradient-to-b from-primary-c50 to-white text-primary-c900 text-xs font-medium">
                     Specs
                   </label>
-                  <div className="border border-primary-c900 rounded-xl px-4 py-2.5 bg-white min-h-[40px] mt-1">
+                  <div className="text-grey-c900 border border-primary-c900 rounded-xl px-4 py-2.5 bg-white min-h-[40px] mt-1 whitespace-pre-line">
                     {supplier.specs}
                   </div>
                 </div>
@@ -116,15 +114,32 @@ const ProductsSupplierResults = ({ results }: ProductsSupplierResultsProps) => {
                     href={supplier.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="border border-primary-c900 rounded-xl px-4 py-2.5 bg-white min-h-[40px] mt-1 block text-primary-c900 hover:bg-primary-c50 transition-colors"
+                    className="border border-primary-c900 rounded-xl px-4 py-2.5 bg-white min-h-[40px] mt-1 block text-primary-c900 hover:bg-primary-c50 transition-colors truncate max-w-full overflow-hidden"
+                    title={supplier.link}
                   >
                     {supplier.link}
                   </a>
                 </div>
+                {supplier.price ? (
+                  <div className="relative">
+                    <label className="absolute -top-1 left-2 px-1 bg-gradient-to-b from-primary-c50 to-white text-primary-c900 text-xs font-medium">
+                      Price
+                    </label>
+                    <div className="border border-primary-c900 rounded-xl px-4 py-2.5 bg-white min-h-[40px] mt-1">
+                      {supplier.price}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           ))}
         </div>
+      </>
+    );
+
+    return (
+      <div key={index} className="bg-primary-c50 rounded-lg p-4 flex flex-col gap-2 mb-4">
+        {productContent}
       </div>
     );
   };
@@ -132,7 +147,9 @@ const ProductsSupplierResults = ({ results }: ProductsSupplierResultsProps) => {
   return (
     <div className={`flex flex-col gap-4 ${!results?.products ? "h-[calc(100vh-300px)]" : ""}`}>
       {results?.products ? (
-        <div className="flex flex-col gap-4 overflow-y-auto">{results.products.map(renderProduct)}</div>
+        <div className="flex flex-col gap-4 overflow-y-auto">
+          {results.products.map((product, index) => renderProduct(product, index))}
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center text-grey-c400 text-center py-4">
           Upload a file and click &quot;Extract Products &amp; Suppliers&quot; to see results
